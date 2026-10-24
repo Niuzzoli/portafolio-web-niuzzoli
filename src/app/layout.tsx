@@ -54,6 +54,8 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large" },
   },
+  // Verificación de Google Search Console (propiedad con prefijo de URL)
+  verification: { google: "6EB5Vt-PTvZ7pv8HudQLnNOXcoxOo2eP54eYmiDgtR8" },
 };
 
 export const viewport: Viewport = {
