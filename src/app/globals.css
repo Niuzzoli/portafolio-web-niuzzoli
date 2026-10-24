@@ -156,3 +156,66 @@
 .dark .spotlight-nav-shadow {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
 }
+
+/* Luz que recorre el texto: un degradado más ancho que la palabra que va y vuelve despacio.
+   text-shine para fondos oscuros (bordós), text-shine-light para la tarjeta bordó (cremas). */
+.text-shine,
+.text-shine-light {
+  background-size: 250% 100%;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: text-shine-drift 7s ease-in-out infinite alternate;
+}
+
+.text-shine {
+  background-image: linear-gradient(
+    110deg,
+    #a51c34 0%,
+    #c4314b 30%,
+    #ffa494 48%,
+    #c4314b 66%,
+    #a51c34 100%
+  );
+}
+
+.text-shine-light {
+  background-image: linear-gradient(
+    110deg,
+    #f6eee6 0%,
+    #f6eee6 30%,
+    #ffc4b8 46%,
+    #ffffff 50%,
+    #f6eee6 66%,
+    #f6eee6 100%
+  );
+}
+
+@keyframes text-shine-drift {
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-shine,
+  .text-shine-light {
+    animation: none;
+    background-position: 50% 50%;
+  }
+}
+
+/* Texto seleccionado con los colores de la web en vez del azul del navegador.
+   Sobre fondos bordó (contacto, tarjeta Desarrollo) va invertido con la clase selection-invert:
+   el selector con clase pesa más que el general, así que gana sin importar el orden. */
+::selection {
+  background-color: #7f011f;
+  color: #f6eee6;
+}
+
+.selection-invert::selection,
+.selection-invert ::selection {
+  background-color: #f6eee6;
+  color: #7f011f;
+}

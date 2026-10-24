@@ -1,16 +1,18 @@
 import { cn } from "@/lib/utils";
 
-// Logo provisorio: reemplazar el contenido por tu SVG (o un <img src="/logo.svg" />).
-// Tiene que escalar con el font-size, porque la intro lo usa gigante y la nav chico.
+// Mide 1em de alto: escala con el font-size, porque la intro lo usa gigante y la nav chico.
 export default function Logo({ className }: { className?: string }) {
   return (
-    <span
-      className={cn(
-        "inline-flex select-none items-baseline font-bold leading-none tracking-[-0.06em]",
-        className
-      )}
-    >
-      ni<span className="text-[#c4314b]">.</span>
+    <span className={cn("inline-flex select-none leading-none", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- tiene que medir 1em, next/image pide tamaño fijo */}
+      <img
+        src="/logo.png"
+        alt="Niuzzoli"
+        width={516}
+        height={580}
+        draggable={false}
+        className="block h-[1em] w-auto"
+      />
     </span>
   );
 }

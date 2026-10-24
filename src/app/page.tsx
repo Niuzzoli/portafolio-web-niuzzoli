@@ -6,10 +6,75 @@ import Projects from "@/components/sections/Projects";
 import Process from "@/components/sections/Process";
 import Contact from "@/components/sections/Contact";
 import SiteFooter from "@/components/SiteFooter";
+import { CONTACT_EMAIL, LOCATION, SOCIALS } from "@/lib/contact";
+import { AUTHOR, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+
+// Datos estructurados: le dicen a Google quién sos, dónde trabajás y qué ofrecés.
+// Se pueden validar en https://search.google.com/test/rich-results
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "ProfessionalService",
+      "@id": `${SITE_URL}/#negocio`,
+      name: SITE_NAME,
+      description: SITE_DESCRIPTION,
+      url: SITE_URL,
+      logo: `${SITE_URL}/logo.png`,
+      image: `${SITE_URL}/opengraph-image`,
+      email: CONTACT_EMAIL,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: LOCATION.city,
+        addressRegion: LOCATION.region,
+        addressCountry: LOCATION.country,
+      },
+      areaServed: { "@type": "Country", name: "Argentina" },
+      founder: { "@id": `${SITE_URL}/#persona` },
+      sameAs: SOCIALS.map((social) => social.href),
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Servicios",
+        itemListElement: [
+          "Diseño web",
+          "Desarrollo web",
+          "Automatizaciones",
+        ].map((name) => ({
+          "@type": "Offer",
+          itemOffered: { "@type": "Service", name },
+        })),
+      },
+    },
+    {
+      "@type": "Person",
+      "@id": `${SITE_URL}/#persona`,
+      name: AUTHOR,
+      jobTitle: "Diseñador y desarrollador web",
+      url: SITE_URL,
+      sameAs: SOCIALS.map((social) => social.href),
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#sitio`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      inLanguage: "es-AR",
+      publisher: { "@id": `${SITE_URL}/#negocio` },
+    },
+  ],
+};
 
 export default function Home() {
   return (
     <main className="bg-black text-white">
+      <script
+        type="application/ld+json"
+        // El reemplazo de "<" evita que un texto cierre el <script> (recomendación de la guía de Next)
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
+
       {/* Nav + intro del logo */}
       <SiteHeader />
 

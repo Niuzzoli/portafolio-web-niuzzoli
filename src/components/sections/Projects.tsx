@@ -16,13 +16,37 @@ type Project = {
   href?: string;
 };
 
-// Textos provisorios
 const projects: Project[] = [
-  { title: "Proyecto uno", description: "Una línea que resuma qué se hizo y para quién." },
-  { title: "Proyecto dos", description: "Una línea que resuma qué se hizo y para quién." },
-  { title: "Proyecto tres", description: "Una línea que resuma qué se hizo y para quién." },
-  { title: "Proyecto cuatro", description: "Una línea que resuma qué se hizo y para quién." },
-  { title: "Proyecto cinco", description: "Una línea que resuma qué se hizo y para quién." },
+  {
+    title: "Agendo",
+    description: "Asistente que responde consultas y agenda turnos solo, mientras el negocio sigue trabajando.",
+    image: "/proyectos/proyecto1.png",
+    href: "https://agendobot.vercel.app",
+  },
+  {
+    title: "Proa Energy",
+    description: "Web institucional para una consultora de petróleo, gas y eficiencia energética.",
+    image: "/proyectos/proyecto2.png",
+    href: "https://proaenergy.com.ar",
+  },
+  {
+    title: "Noir Barbería",
+    description: "Sitio para una barbería con servicios, equipo, galería y reserva de turnos online.",
+    image: "/proyectos/proyecto3.png",
+    href: "https://barberianoir.vercel.app",
+  },
+  {
+    title: "Detective",
+    description: "Juego de investigación: casos con evidencias, sospechosos y líneas de tiempo para resolver.",
+    image: "/proyectos/proyecto4.png",
+    href: "https://detectiveando.vercel.app",
+  },
+  {
+    title: "Daily Puzzles",
+    description: "Un puzzle nuevo cada día: Wordle, Sudoku y Connections con rachas y estadísticas.",
+    image: "/proyectos/proyecto5.png",
+    href: "https://minipuzzles.vercel.app",
+  },
 ];
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -101,7 +125,7 @@ export default function Projects() {
         >
           Proyectos<span className="text-[#c4314b]">.</span>
         </h2>
-        <p className="mb-1 hidden text-sm font-medium tabular-nums text-white/50 motion-safe:block md:mb-3">
+        <p className="mb-1 hidden font-mono text-sm font-medium tabular-nums text-white/50 motion-safe:block md:mb-3">
           <span ref={counter} className="text-white">01</span> / {pad(projects.length)}
         </p>
       </div>
@@ -120,10 +144,10 @@ export default function Projects() {
                   {project.image ? (
                     <Image
                       src={project.image}
-                      alt={project.title}
+                      alt={`Captura de la web de ${project.title}`}
                       fill
                       sizes="100vw"
-                      className="object-cover transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+                      className="object-cover object-top transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
                     />
                   ) : (
                     <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_at_70%_30%,#3a0712_0%,#120d0f_60%)]">
@@ -138,7 +162,7 @@ export default function Projects() {
 
                 <div className="relative flex items-end justify-between gap-6 p-5 md:p-10">
                   <div className="max-w-3xl">
-                    <span className="text-sm font-medium tabular-nums text-white/50">{pad(i + 1)}</span>
+                    <span className="font-mono text-sm font-medium tabular-nums text-white/50">{pad(i + 1)}</span>
                     <h3 className="mt-2 text-[clamp(2.2rem,6vw,5rem)] font-bold leading-[0.9] tracking-[-0.05em]">
                       {project.title}
                     </h3>

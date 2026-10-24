@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { useLenis } from "lenis/react";
 import Logo from "@/components/Logo";
@@ -12,7 +13,7 @@ import {
 import PillButton from "@/components/PillButton";
 import PillNav, { type PillNavItem } from "@/components/PillNav";
 
-gsap.registerPlugin(useGSAP);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export const INTRO_DONE_EVENT = "intro:done";
 
@@ -96,8 +97,15 @@ export default function SiteHeader() {
   // Sin scroll mientras dura la intro
   useEffect(() => {
     if (!lenis) return;
-    if (introDone) lenis.start();
-    else lenis.stop();
+    if (!introDone) {
+      lenis.stop();
+      return;
+    }
+    lenis.start();
+    // Con el scroll bloqueado no hay barra vertical: las secciones fijadas (Proyectos) se midieron
+    // con el ancho de la ventana entera y sobraba scroll horizontal. Al aparecer la barra se vuelve a medir.
+    const frame = requestAnimationFrame(() => ScrollTrigger.refresh());
+    return () => cancelAnimationFrame(frame);
   }, [lenis, introDone]);
 
   useGSAP(
@@ -233,7 +241,7 @@ export default function SiteHeader() {
           }}
           className="spotlight-nav-bg glass-border spotlight-nav-shadow invisible flex h-11 items-center justify-self-start rounded-full px-5 text-white"
         >
-          <span ref={navLogo} className="invisible">
+          <span ref={navLogo} className="invisible flex">
             <Logo className="text-[1.375rem]" />
           </span>
         </a>
@@ -284,7 +292,7 @@ export default function SiteHeader() {
           collapse="always"
           intro={false}
           logo={
-            <span ref={mobileLogo} className="invisible text-white">
+            <span ref={mobileLogo} className="invisible flex text-white">
               <Logo className="text-[1.05rem]" />
             </span>
           }
@@ -307,9 +315,9 @@ export default function SiteHeader() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div
             ref={flyLogo}
-            className="invisible text-white will-change-transform"
+            className="invisible flex text-white will-change-transform"
           >
-            <Logo className="text-[clamp(7rem,32vw,22rem)]" />
+            <Logo className="text-[clamp(7rem,30vw,15rem)]" />
           </div>
         </div>
       </div>

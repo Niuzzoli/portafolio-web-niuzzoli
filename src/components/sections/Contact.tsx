@@ -1,27 +1,27 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import {
+  startTransition,
+  useActionState,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import PillButton from "@/components/PillButton";
-import { WHATSAPP_URL } from "@/lib/contact";
+import { CONTACT_EMAIL, LOCATION, SOCIALS, WHATSAPP_URL } from "@/lib/contact";
+import { sendContact, type ContactState } from "@/app/actions/contact";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-// Datos provisorios: reemplazar por los tuyos
-const CONTACT_EMAIL = "ignaiuzzolino@gmail.com";
 const contactInfo = [
   { label: "Email", value: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
-  { label: "Ubicación", value: "Cipolletti, Río Negro, Argentina" },
+  { label: "Ubicación", value: LOCATION.label },
 ];
-const socials = [
-  { label: "Instagram", href: "https://www.instagram.com/nacho_iuzzo/" },
-  { label: "LinkedIn", href: "https://www.linkedin.com/in/nacho-iuzzolino-846684321/" },
-  { label: "GitHub", href: "https://www.github.com/niuzzoli/" },
-  { label: "WhatsApp", href: WHATSAPP_URL },
-];
+const socials = [...SOCIALS, { label: "WhatsApp", href: WHATSAPP_URL }];
 const services = ["Diseño", "Desarrollo", "Automatizaciones", "Otro"];
 
 function ArrowUpRight({ className }: { className?: string }) {
@@ -46,12 +46,25 @@ function ArrowUpRight({ className }: { className?: string }) {
 const fieldClass =
   "w-full border-b border-[#f6eee6]/25 bg-transparent py-3 text-base text-[#f6eee6] outline-none transition-colors duration-300 placeholder:text-[#f6eee6]/35 focus:border-[#f6eee6]";
 const labelClass =
-  "text-[11px] font-medium uppercase tracking-[0.18em] text-[#f6eee6]/60";
+  "font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-[#f6eee6]/60";
 
 export default function Contact() {
   const section = useRef<HTMLElement>(null);
   const card = useRef<HTMLDivElement>(null);
+  const form = useRef<HTMLFormElement>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [state, formAction, pending] = useActionState(
+    async (prev: ContactState, data: FormData) => {
+      const result = await sendContact(prev, data);
+      // Solo se vacía si salió bien: si falla, el visitante no pierde lo que escribió
+      if (result.status === "success") {
+        form.current?.reset();
+        setSelected([]);
+      }
+      return result;
+    },
+    { status: "idle" },
+  );
 
   useGSAP(
     () => {
@@ -90,19 +103,12 @@ export default function Contact() {
         : [...prev, service],
     );
 
-  // Sin backend todavía: abre el mail del visitante con todo cargado.
-  // Para recibirlo directo (Formspree, Resend, etc.) se cambia solo esta función.
+  // Con onSubmit (y no action) React no vacía el formulario cuando el envío falla
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    const lines = [
-      `Nombre: ${data.get("name")}`,
-      `Email: ${data.get("email")}`,
-    ];
-    if (selected.length) lines.push(`Servicios: ${selected.join(", ")}`);
-    const body = [...lines, "", String(data.get("message"))].join("\n");
-    const subject = `Nuevo proyecto · ${data.get("name")}`;
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    selected.forEach((service) => data.append("services", service));
+    startTransition(() => formAction(data));
   };
 
   return (
@@ -113,7 +119,7 @@ export default function Contact() {
     >
       <div
         ref={card}
-        className="origin-top overflow-clip rounded-[1.75rem] bg-[#7f011f] text-[#f6eee6] will-change-transform md:rounded-[2.5rem]"
+        className="origin-top overflow-clip rounded-[1.75rem] bg-[#7f011f] text-[#f6eee6] selection-invert will-change-transform md:rounded-[2.5rem]"
       >
         <div className="mx-auto grid max-w-7xl gap-16 px-5 py-14 md:px-10 md:py-20 lg:grid-cols-[1fr_1.1fr] lg:gap-24 lg:px-16 lg:py-28">
           {/* Izquierda: título, datos y redes */}
@@ -128,7 +134,7 @@ export default function Contact() {
               data-reveal
               className="text-[clamp(3rem,8vw,6.5rem)] font-bold leading-[0.88] tracking-[-0.055em]"
             >
-              Hablemos de tu proyecto.
+              Hablemos de <span className="text-shine-light">tu proyecto.</span>
             </h2>
             <p
               data-reveal
@@ -181,10 +187,20 @@ export default function Contact() {
 
           {/* Derecha: formulario */}
           <form
+            ref={form}
             data-reveal
             onSubmit={onSubmit}
             className="flex flex-col gap-9 lg:pt-4"
           >
+            {/* Campo trampa para bots: oculto para personas y lectores de pantalla */}
+            <input
+              name="company"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden
+              className="absolute -left-[9999px] size-px opacity-0"
+            />
+
             <div className="grid gap-9 sm:grid-cols-2 sm:gap-6">
               <label className="block">
                 <span className={labelClass}>Nombre</span>
@@ -247,13 +263,26 @@ export default function Contact() {
 
             {/* Mismo hover que Hablemos y Contacto. El relleno es del mismo bordó que la tarjeta,
               así que un borde crema marca el contorno del botón mientras está lleno */}
-            <PillButton
-              type="submit"
-              label="Enviar mensaje"
-              accentClassName="bg-[#7f011f] text-[#f6eee6]"
-              hoverTextClassName="group-hover:text-[#f6eee6] group-focus-visible:text-[#f6eee6]"
-              className="bg-[#f6eee6] text-[#7f011f] ring-1 ring-transparent transition-[scale,box-shadow] hover:ring-[#f6eee6]/60 focus-visible:ring-[#f6eee6]/60"
-            />
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+              <PillButton
+                type="submit"
+                disabled={pending}
+                aria-disabled={pending}
+                label={pending ? "Enviando…" : "Enviar mensaje"}
+                accentClassName="bg-[#7f011f] text-[#f6eee6]"
+                hoverTextClassName="group-hover:text-[#f6eee6] group-focus-visible:text-[#f6eee6]"
+                className="w-fit bg-[#f6eee6] text-[#7f011f] ring-1 ring-transparent transition-[scale,box-shadow] hover:ring-[#f6eee6]/60 focus-visible:ring-[#f6eee6]/60 disabled:pointer-events-none disabled:opacity-70"
+              />
+              <p
+                aria-live="polite"
+                className="text-sm font-medium text-[#f6eee6]/85"
+              >
+                {!pending &&
+                  state.status === "success" &&
+                  "¡Gracias! Te respondo en menos de 24 horas."}
+                {!pending && state.status === "error" && state.message}
+              </p>
+            </div>
           </form>
         </div>
       </div>

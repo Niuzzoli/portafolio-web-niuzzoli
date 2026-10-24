@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { useLenis } from "lenis/react";
 import { AnimatePresence, motion, type Variants } from "motion/react";
-import { CircleCheck, MessagesSquare, Monitor, PanelsTopLeft, Rocket, type LucideProps } from "lucide-react";
+import { MessagesSquare, Monitor, PanelsTopLeft, Rocket, type LucideProps } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -51,24 +51,83 @@ function BriefPanel() {
   );
 }
 
-function PlanPanel() {
-  const tasks = ["Estructura y objetivos", "Diseño y funcionalidades", "Plan de desarrollo"];
+const PLAN_TASKS = ["Estructura y objetivos", "Diseño y funcionalidades", "Plan de desarrollo"];
+// Avance dentro del paso (0 a 1) en el que se tilda cada tarea. El primero espera a que el panel termine de entrar
+// y el último deja un tramo con las tres marcadas antes de pasar al siguiente paso.
+const PLAN_THRESHOLDS = [0.22, 0.45, 0.68];
+
+function TaskIcon({ state }: { state: "done" | "current" | "pending" }) {
+  return (
+    <span className="relative grid size-[18px] shrink-0 place-items-center" aria-hidden>
+      <AnimatePresence mode="popLayout" initial={false}>
+        {state === "done" ? (
+          <motion.svg
+            key="done"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="absolute inset-0 size-[18px] text-emerald-400/90"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 420, damping: 22 }}
+          >
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+            <motion.path
+              d="m8.5 12.5 2.5 2.5 4.5-5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.35, ease, delay: 0.08 }}
+            />
+          </motion.svg>
+        ) : state === "current" ? (
+          <motion.span
+            key="current"
+            className="absolute inset-0 grid place-items-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <span className="absolute inset-0 animate-ping rounded-full bg-white/30" />
+            <span className="size-[14px] rounded-full bg-white/85" />
+          </motion.span>
+        ) : (
+          <motion.span
+            key="pending"
+            className="size-[14px] rounded-full border border-white/25"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          />
+        )}
+      </AnimatePresence>
+    </span>
+  );
+}
+
+// Las tareas se van tildando con el scroll: done = cuántas están hechas
+function PlanPanel({ done = 0 }: { done?: number }) {
   return (
     <>
       <PanelHead icon={PanelsTopLeft} title="El plan" />
       <motion.ul variants={list} initial="hidden" animate="show" className="space-y-3.5 rounded-xl border border-white/10 p-4">
-        {tasks.map((task, i) => {
-          const done = i < tasks.length - 1;
+        {PLAN_TASKS.map((task, i) => {
+          const state = i < done ? "done" : i === done ? "current" : "pending";
           return (
-            <motion.li key={task} variants={item} className="flex items-center gap-3 text-sm text-white/85">
-              {done ? (
-                <CircleCheck className="size-[18px] text-emerald-400/90" strokeWidth={1.5} aria-hidden />
-              ) : (
-                <span className="relative grid size-[18px] place-items-center" aria-hidden>
-                  <span className="absolute inset-0 animate-ping rounded-full bg-white/30" />
-                  <span className="size-[14px] rounded-full bg-white/85" />
-                </span>
+            <motion.li
+              key={task}
+              variants={item}
+              className={cn(
+                "flex items-center gap-3 text-sm transition-colors duration-300",
+                state === "pending" ? "text-white/45" : "text-white/85"
               )}
+            >
+              <TaskIcon state={state} />
               {task}
             </motion.li>
           );
@@ -187,9 +246,12 @@ const steps = [
   },
 ];
 
+const PLAN_STEP = steps.findIndex((step) => step.Panel === PlanPanel);
+
 export default function Process() {
   const lenis = useLenis();
   const [active, setActive] = useState(0);
+  const [planDone, setPlanDone] = useState(0);
 
   const root = useRef<HTMLElement>(null);
   const inner = useRef<HTMLDivElement>(null);
@@ -213,6 +275,10 @@ export default function Process() {
             const index = Math.min(steps.length - 1, Math.floor(raw));
             setActive(index);
             root.current?.style.setProperty("--step-p", String(Math.min(1, raw - index)));
+            // Avance dentro del paso del Plan (0 antes de llegar, 1 después de pasarlo).
+            // React ignora el setState si el número no cambió, así que no re-renderiza en cada frame.
+            const planP = gsap.utils.clamp(0, 1, raw - PLAN_STEP);
+            setPlanDone(PLAN_THRESHOLDS.filter((t) => planP >= t).length);
           },
         });
       });
@@ -236,11 +302,12 @@ export default function Process() {
         className="mx-auto max-w-6xl px-4 pt-28 md:px-8 lg:grid lg:h-svh lg:grid-cols-[1fr_1.05fr] lg:grid-rows-[auto_auto] lg:content-center lg:gap-x-20 lg:pt-24"
       >
         <div className="lg:col-start-1 lg:row-start-1">
-          <span className="mb-6 inline-block rounded-full border border-white/15 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.25em] text-white/60">
+          {/* <span className="mb-6 inline-block rounded-full border border-white/15 px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-white/60">
             Cómo trabajamos
-          </span>
+          </span> */}
           <h2 className="max-w-[14ch] text-[clamp(2.4rem,5.5vw,4rem)] font-bold leading-[0.95] tracking-[-0.045em]">
-            De la idea al lanzamiento en cuatro pasos.
+            De la idea al lanzamiento{" "}
+            <span className="text-shine">en cuatro pasos.</span>
           </h2>
           <p className="mt-5 max-w-md text-[clamp(1rem,1.4vw,1.125rem)] leading-relaxed text-white/55">
             Un proceso claro y a la vista en cada etapa: sabés qué se está haciendo, por qué y qué viene después.
@@ -327,7 +394,7 @@ export default function Process() {
                     exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
                     transition={{ duration: 0.35, ease }}
                   >
-                    <Panel />
+                    {Panel === PlanPanel ? <PlanPanel done={planDone} /> : <Panel />}
                   </motion.div>
                 </AnimatePresence>
               </div>

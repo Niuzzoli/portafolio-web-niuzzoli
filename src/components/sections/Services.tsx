@@ -25,6 +25,7 @@ type Service = {
 const services: Service[] = [
   {
     title: "Diseño",
+    image: "/servicios/diseno.jpg",
     description: "Interfaces e identidades pensadas para que tu marca se vea y se sienta a la altura.",
     tone: "bg-[#efe8df] text-[#140f10]",
     accent: "text-[#7f011f]",
@@ -32,13 +33,15 @@ const services: Service[] = [
   },
   {
     title: "Desarrollo",
+    image: "/servicios/desarrollo.jpg",
     description: "Webs y aplicaciones rápidas, responsive y hechas para crecer con tu proyecto.",
-    tone: "bg-[#7f011f] text-[#f6eee6]",
+    tone: "bg-[#7f011f] text-[#f6eee6] selection-invert",
     accent: "text-[#ffb3a7]",
     placement: "rotate-1 translate-y-3 md:translate-x-0 md:translate-y-4 md:rotate-3",
   },
   {
     title: "Automatizaciones",
+    image: "/servicios/automatizacion.jpg",
     description: "Procesos que trabajan solos para que vos te dediques a lo importante.",
     tone: "bg-[#1b1416] text-[#f6eee6] ring-1 ring-white/10",
     accent: "text-[#e0566c]",
@@ -80,11 +83,13 @@ export default function Services() {
         <h2 className="text-[clamp(2.6rem,9vw,7.5rem)] font-bold uppercase leading-[0.88] tracking-[-0.045em]">
           Ideas claras.
         </h2>
-        <h2 className="text-[clamp(2.6rem,9vw,7.5rem)] font-bold uppercase leading-[0.88] tracking-[-0.045em]">
+        {/* En la fuente de código: la mono es más ancha, así que va un poco más chica para que las dos líneas midan parecido */}
+        <h2 className="font-mono text-[clamp(2.1rem,7.4vw,6.2rem)] font-bold uppercase leading-[0.95] tracking-[-0.07em]">
           Código limpio.
         </h2>
-        <p className="mt-4 text-[clamp(1.6rem,4.5vw,3.5rem)] font-medium leading-none tracking-[-0.03em] text-[#c4314b]">
-          Todo en un mismo lugar.
+        <p className="mt-4 text-[clamp(1.6rem,4.5vw,3.5rem)] font-medium leading-none tracking-[-0.03em]">
+          <span className="text-shine">
+          Todo en un mismo lugar.</span>
         </p>
       </div>
 
@@ -106,20 +111,20 @@ export default function Services() {
                 <div className="flex items-start justify-between">
                   <div className="relative aspect-square w-[52%] overflow-hidden rounded-[1.25rem] bg-current/10">
                     {service.image ? (
-                      <Image src={service.image} alt={service.title} fill sizes="200px" className="object-cover" />
+                      <Image src={service.image} alt={service.title} fill sizes="(min-width: 768px) 190px, 50vw" className="object-cover" />
                     ) : (
                       <span className="absolute inset-0 grid place-items-center text-[10px] uppercase tracking-[0.2em] opacity-40">
                         Imagen
                       </span>
                     )}
                   </div>
-                  <span className={cn("grid size-10 place-items-center rounded-full bg-current/10", service.accent)}>
+                  {/* <span className={cn("grid size-10 place-items-center rounded-full bg-current/10", service.accent)}>
                     <Arrow />
-                  </span>
+                  </span> */}
                 </div>
   
                 <div className="mt-auto px-3 pb-3">
-                  <span className="text-sm font-medium tabular-nums opacity-50">0{i + 1}</span>
+                  <span className="font-mono text-xs font-medium tabular-nums opacity-50">0{i + 1}</span>
                   <h3 className="mt-1 text-[1.75rem] font-bold uppercase leading-[0.95] tracking-[-0.04em]">
                     {service.title}
                   </h3>
