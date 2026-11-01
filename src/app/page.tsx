@@ -5,9 +5,7 @@ import Services from "@/components/sections/Services";
 import Projects from "@/components/sections/Projects";
 import Process from "@/components/sections/Process";
 import Contact from "@/components/sections/Contact";
-// PRUEBA de footer: para volver al original, descomentar SiteFooter y usarlo abajo en lugar de SiteFooterOutline
-// import SiteFooter from "@/components/SiteFooter";
-import SiteFooterOutline from "@/components/SiteFooterOutline";
+import SiteFooter from "@/components/SiteFooter";
 import { CONTACT_EMAIL, LOCATION, SOCIALS } from "@/lib/contact";
 import { AUTHOR, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -118,11 +116,10 @@ export default function Home() {
         <Services />
         <Projects />
         <Process />
-        {/* PRUEBA: logoFondo dibuja el logo de fondo. Para volver al original, sacar la prop */}
         <Contact />
       </div>
 
-      <SiteFooterOutline />
+      <SiteFooter />
     </main>
   );
 }
