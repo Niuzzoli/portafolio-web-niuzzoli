@@ -63,7 +63,7 @@ function currentSection() {
 }
 
 // Tiempo mínimo que el logo queda a pantalla completa, aunque todo cargue antes
-const MIN_INTRO_MS = 1100;
+const MIN_INTRO_MS = 500;
 // Si algo tarda demasiado en cargar, la intro sigue igual
 const MAX_WAIT_MS = 3500;
 
@@ -131,7 +131,14 @@ export default function SiteHeader() {
         gsap.set([navLogo.current, mobileLogo.current], { autoAlpha: 1 });
         gsap.set([flyLogo.current, backdrop.current], { autoAlpha: 0 });
         setIntroDone(true);
-        // Aviso para el hero: el título arranca recién cuando el logo llegó a su lugar
+        startHero();
+      };
+
+      // Aviso para el hero: el título arranca a la vez que entra la nav (una sola vez)
+      let heroStarted = false;
+      const startHero = () => {
+        if (heroStarted) return;
+        heroStarted = true;
         document.documentElement.dataset.intro = "done";
         window.dispatchEvent(new Event(INTRO_DONE_EVENT));
       };
@@ -171,7 +178,9 @@ export default function SiteHeader() {
 
         // Se mide antes de tocar escalas: el logo gigante viaja hasta el lugar exacto del logo chico.
         // El destino es el logo que se ve: el de la nav de escritorio o el del menú móvil.
-        gsap.set(flyLogo.current, { yPercent: 0 });
+        // Se corta el fade-in por si seguía en curso: si no, pisaba el autoAlpha del final y el logo quedaba duplicado
+        gsap.killTweensOf(flyLogo.current);
+        gsap.set(flyLogo.current, { autoAlpha: 1, yPercent: 0 });
         const target = navLogo.current!.offsetParent
           ? navLogo.current!
           : mobileLogo.current!;
@@ -184,37 +193,38 @@ export default function SiteHeader() {
             x: to.left + to.width / 2 - (from.left + from.width / 2),
             y: to.top + to.height / 2 - (from.top + from.height / 2),
             scale: to.width / from.width,
-            duration: 1.4,
+            duration: 1.1,
             ease: "expo.inOut",
           })
           .to(
             backdrop.current,
-            { autoAlpha: 0, duration: 1.1, ease: "power2.inOut" },
-            0.25,
+            { autoAlpha: 0, duration: 0.5, ease: "power2.inOut" },
+            0.15,
           )
           .fromTo(
             logoPill.current,
             { autoAlpha: 0, scale: 0.6 },
-            { autoAlpha: 1, scale: 1, duration: 0.7, ease: "back.out(1.7)" },
-            1.05,
+            { autoAlpha: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)" },
+            0.5,
           )
+          .call(startHero, [], 0.55)
           .fromTo(
             navPill.current,
             { autoAlpha: 0, y: -16 },
-            { autoAlpha: 1, y: 0, duration: 0.9, ease: "expo.out" },
-            1.2,
+            { autoAlpha: 1, y: 0, duration: 0.6, ease: "expo.out" },
+            0.55,
           )
           .fromTo(
             contactPill.current,
             { autoAlpha: 0, scale: 0.6 },
-            { autoAlpha: 1, scale: 1, duration: 0.7, ease: "back.out(1.7)" },
-            1.3,
+            { autoAlpha: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)" },
+            0.6,
           )
           .fromTo(
             mobileNav.current,
             { autoAlpha: 0 },
-            { autoAlpha: 1, duration: 0.6, ease: "power2.out" },
-            1.05,
+            { autoAlpha: 1, duration: 0.5, ease: "power2.out" },
+            0.55,
           );
       });
 

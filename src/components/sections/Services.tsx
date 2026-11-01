@@ -25,15 +25,15 @@ type Service = {
 const services: Service[] = [
   {
     title: "Diseño",
-    image: "/servicios/diseno.jpg",
+    image: "/servicios/diseno.png",
     description: "Interfaces e identidades pensadas para que tu marca se vea y se sienta a la altura.",
-    tone: "bg-[#efe8df] text-[#140f10]",
+    tone: "bg-[#c9a7a7] text-[#140f10]",
     accent: "text-[#7f011f]",
     placement: "-rotate-2 translate-y-0 md:-translate-x-[45%] md:-translate-y-10 md:-rotate-6 lg:-translate-x-[62%]",
   },
   {
     title: "Desarrollo",
-    image: "/servicios/desarrollo.jpg",
+    image: "/servicios/desarrollo.png",
     description: "Webs y aplicaciones rápidas, responsive y hechas para crecer con tu proyecto.",
     tone: "bg-[#7f011f] text-[#f6eee6] selection-invert",
     accent: "text-[#ffb3a7]",
@@ -41,7 +41,7 @@ const services: Service[] = [
   },
   {
     title: "Automatizaciones",
-    image: "/servicios/automatizacion.jpg",
+    image: "/servicios/automatizaciones.png",
     description: "Procesos que trabajan solos para que vos te dediques a lo importante.",
     tone: "bg-[#1b1416] text-[#f6eee6] ring-1 ring-white/10",
     accent: "text-[#e0566c]",
@@ -81,11 +81,11 @@ export default function Services() {
           Servicios
         </span> */}
         <h2 className="text-[clamp(2.6rem,9vw,7.5rem)] font-bold uppercase leading-[0.88] tracking-[-0.045em]">
-          Ideas claras.
+          Del concepto
         </h2>
         {/* En la fuente de código: la mono es más ancha, así que va un poco más chica para que las dos líneas midan parecido */}
         <h2 className="font-mono text-[clamp(2.1rem,7.4vw,6.2rem)] font-bold uppercase leading-[0.95] tracking-[-0.07em]">
-          Código limpio.
+          a la solución.
         </h2>
         <p className="mt-4 text-[clamp(1.6rem,4.5vw,3.5rem)] font-medium leading-none tracking-[-0.03em]">
           <span className="text-shine">

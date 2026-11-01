@@ -77,8 +77,8 @@ export default function Hero() {
               trigger="load"
               staggerFrom="start"
               splitType="chars"
-              delay={12}
-              duration={0.9}
+              delay={5}
+              duration={0.6}
               textAlign="left"
               onLetterAnimationComplete={() => setDescriptionDone(true)}
               className={descriptionClass}
