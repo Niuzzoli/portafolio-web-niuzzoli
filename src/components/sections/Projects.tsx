@@ -13,6 +13,10 @@ type Project = {
   description: string;
   // Ruta en /public, por ejemplo "/proyectos/proyecto-1.jpg". Sin imagen se ve el espacio reservado.
   image?: string;
+  // Dónde está lo importante de la imagen, de izquierda (0%) a derecha (100%).
+  // En el celular la tarjeta es vertical y solo entra una franja de la imagen: esto elige cuál.
+  // En pantallas anchas casi no se nota. Sin valor queda centrada.
+  focus?: string;
   href?: string;
 };
 
@@ -20,31 +24,43 @@ const projects: Project[] = [
   {
     title: "Agendo",
     description: "Asistente que responde consultas y agenda turnos solo, mientras el negocio sigue trabajando.",
-    image: "/proyectos/proyecto1.png",
+    image: "/proyectos/agendobot.png",
+    focus: "50%",
     href: "https://agendobot.vercel.app",
   },
   {
     title: "Proa Energy",
     description: "Web institucional para una consultora de petróleo, gas y eficiencia energética.",
-    image: "/proyectos/proyecto2.png",
+    image: "/proyectos/proa.png",
+    focus: "85%",
     href: "https://proaenergy.com.ar",
+  },
+  {
+    title: "Serdigital",
+    description: "Consultora de transformación digital que desarrolla software a medida y brinda soluciones de seguridad informática para empresas.",
+    image: "/proyectos/serdigital.png",
+    focus: "90%",
+    href: "https://serdigital.com.ar",
   },
   {
     title: "Noir Barbería",
     description: "Sitio para una barbería con servicios, equipo, galería y reserva de turnos online.",
-    image: "/proyectos/proyecto3.png",
+    image: "/proyectos/barberia.png",
+    focus: "75%",
     href: "https://barberianoir.vercel.app",
   },
-  {
-    title: "Detective",
-    description: "Juego de investigación: casos con evidencias, sospechosos y líneas de tiempo para resolver.",
-    image: "/proyectos/proyecto4.png",
-    href: "https://detectiveando.vercel.app",
-  },
+  // {
+  //   title: "Detective",
+  //   description: "Juego de investigación: casos con evidencias, sospechosos y líneas de tiempo para resolver.",
+  //   image: "/proyectos/detectiveando.png",
+  //   focus: "75%",
+  //   href: "https://detectiveando.vercel.app",
+  // },
   {
     title: "Daily Puzzles",
     description: "Un puzzle nuevo cada día: Wordle, Sudoku y Connections con rachas y estadísticas.",
-    image: "/proyectos/proyecto5.png",
+    image: "/proyectos/minipuzzles.png",
+    focus: "65%",
     href: "https://minipuzzles.vercel.app",
   },
 ];
@@ -93,9 +109,10 @@ export default function Projects() {
         gsap.utils.toArray<HTMLElement>("[data-parallax]").forEach((media) => {
           gsap.fromTo(
             media,
-            { xPercent: -8 },
+            // Recorrido igual al margen del contenedor (-inset-x-[5%]), así no se ven los bordes
+            { xPercent: -4.5 },
             {
-              xPercent: 8,
+              xPercent: 4.5,
               ease: "none",
               scrollTrigger: {
                 trigger: media.parentElement,
@@ -140,14 +157,16 @@ export default function Projects() {
                 {...(project.href?.startsWith("http") && { target: "_blank", rel: "noreferrer" })}
                 className="group relative flex size-full flex-col justify-end overflow-hidden rounded-[1.5rem] bg-[#120d0f] md:rounded-[2rem]"
               >
-                <div data-parallax className="absolute -inset-x-[10%] inset-y-0">
+                <div data-parallax className="absolute -inset-x-[5%] inset-y-0">
                   {project.image ? (
                     <Image
                       src={project.image}
                       alt={`Captura de la web de ${project.title}`}
                       fill
                       sizes="100vw"
-                      className="object-cover object-top transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+                      style={{ objectPosition: `${project.focus ?? "50%"} top` }}
+                      // Celular y tablet: tarjeta vertical, sin cover la imagen se aplasta. Escritorio: se ve entera.
+                      className="object-cover lg:object-fill transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
                     />
                   ) : (
                     <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_at_70%_30%,#3a0712_0%,#120d0f_60%)]">

@@ -85,7 +85,7 @@ export default function Home() {
         {/* Sube sobre el final del hero: sin fondo propio, para que se vea el degradado detrás.
           El margen va en vw porque el separador escala con el ancho de la pantalla.
           Sin eventos de mouse: tapa el final del hero y si no bloquearía el botón. */}
-        <section className="pointer-events-none relative z-10 -mt-[26vw] overflow-hidden md:-mt-[4vw]">
+        <section className="pointer-events-none relative z-10 -mt-[20vw] overflow-hidden md:-mt-[4vw]">
           {/* En pantallas chicas el separador es el doble de ancho y se recortan los costados,
             así el texto y la cinta se ven al doble de tamaño */}
           <div className="-ml-[50%] w-[200%] md:ml-0 md:w-full">
