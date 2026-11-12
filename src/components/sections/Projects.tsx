@@ -49,6 +49,13 @@ const projects: Project[] = [
     focus: "75%",
     href: "https://barberianoir.vercel.app",
   },
+  {
+    title: "750s",
+    description: "Experiencia interactiva dedicada al McLaren 750S, con animaciones, modelo 3D explorable y detalles sobre su diseño e ingeniería.",
+    image: "/proyectos/mclaren.png",
+    focus: "55%",
+    href: "https://750s.vercel.app",
+  },
   // {
   //   title: "Detective",
   //   description: "Juego de investigación: casos con evidencias, sospechosos y líneas de tiempo para resolver.",
@@ -56,13 +63,13 @@ const projects: Project[] = [
   //   focus: "75%",
   //   href: "https://detectiveando.vercel.app",
   // },
-  {
-    title: "Daily Puzzles",
-    description: "Un puzzle nuevo cada día: Wordle, Sudoku y Connections con rachas y estadísticas.",
-    image: "/proyectos/minipuzzles.png",
-    focus: "65%",
-    href: "https://minipuzzles.vercel.app",
-  },
+  // {
+  //   title: "Daily Puzzles",
+  //   description: "Un puzzle nuevo cada día: Wordle, Sudoku y Connections con rachas y estadísticas.",
+  //   image: "/proyectos/minipuzzles.png",
+  //   focus: "65%",
+  //   href: "https://minipuzzles.vercel.app",
+  // },
 ];
 
 const pad = (n: number) => String(n).padStart(2, "0");
