@@ -1,84 +1,55 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, type FocusEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { useLenis } from "lenis/react";
+import { featuredProjects, projects } from "@/data/projects";
+import { consumeReturnToProjects, isReturningToProjects } from "@/lib/return-to-projects";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-type Project = {
-  title: string;
-  description: string;
-  // Ruta en /public, por ejemplo "/proyectos/proyecto-1.jpg". Sin imagen se ve el espacio reservado.
-  image?: string;
-  // Dónde está lo importante de la imagen, de izquierda (0%) a derecha (100%).
-  // En el celular la tarjeta es vertical y solo entra una franja de la imagen: esto elige cuál.
-  // En pantallas anchas casi no se nota. Sin valor queda centrada.
-  focus?: string;
-  href?: string;
-};
-
-const projects: Project[] = [
-  {
-    title: "Agendo",
-    description: "Asistente que responde consultas y agenda turnos solo, mientras el negocio sigue trabajando.",
-    image: "/proyectos/agendobot.png",
-    focus: "50%",
-    href: "https://agendobot.vercel.app",
-  },
-  {
-    title: "Proa Energy",
-    description: "Web institucional para una consultora de petróleo, gas y eficiencia energética.",
-    image: "/proyectos/proa.png",
-    focus: "85%",
-    href: "https://proaenergy.com.ar",
-  },
-  {
-    title: "Serdigital",
-    description: "Consultora de transformación digital que desarrolla software a medida y brinda soluciones de seguridad informática para empresas.",
-    image: "/proyectos/serdigital.png",
-    focus: "90%",
-    href: "https://serdigital.com.ar",
-  },
-  {
-    title: "Noir Barbería",
-    description: "Sitio para una barbería con servicios, equipo, galería y reserva de turnos online.",
-    image: "/proyectos/barberia.png",
-    focus: "75%",
-    href: "https://barberianoir.vercel.app",
-  },
-  {
-    title: "750s",
-    description: "Experiencia interactiva dedicada al McLaren 750S, con animaciones, modelo 3D explorable y detalles sobre su diseño e ingeniería.",
-    image: "/proyectos/mclaren.png",
-    focus: "55%",
-    href: "https://750s.vercel.app",
-  },
-  // {
-  //   title: "Detective",
-  //   description: "Juego de investigación: casos con evidencias, sospechosos y líneas de tiempo para resolver.",
-  //   image: "/proyectos/detectiveando.png",
-  //   focus: "75%",
-  //   href: "https://detectiveando.vercel.app",
-  // },
-  // {
-  //   title: "Daily Puzzles",
-  //   description: "Un puzzle nuevo cada día: Wordle, Sudoku y Connections con rachas y estadísticas.",
-  //   image: "/proyectos/minipuzzles.png",
-  //   focus: "65%",
-  //   href: "https://minipuzzles.vercel.app",
-  // },
-];
+// Carrusel fijado de la home: muestra los proyectos destacados y termina en un paso "Ver todos"
+// que lleva a /proyectos. Los datos salen de src/data/projects.ts.
 
 const pad = (n: number) => String(n).padStart(2, "0");
+
+// Proyectos destacados + la tarjeta "Ver todos"
+const STEPS = featuredProjects.length + 1;
+const MORE = projects.length - featuredProjects.length;
+
+const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
+const FOCUS_RING =
+  "outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 
 export default function Projects() {
   const section = useRef<HTMLElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const viewport = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const counter = useRef<HTMLSpanElement>(null);
+  const slideTrigger = useRef<ScrollTrigger | null>(null);
+  const lenis = useLenis();
+  const lenisRef = useRef(lenis);
+  useEffect(() => {
+    lenisRef.current = lenis;
+  }, [lenis]);
+
+  // Cuánto se desliza el carril para dejar cada tarjeta a la izquierda (la última queda a tope)
+  const stops = () => {
+    const el = track.current!;
+    const distance = el.scrollWidth - el.clientWidth;
+    const cards = Array.from(el.children) as HTMLElement[];
+    const first = cards[0]?.offsetLeft ?? 0;
+    return { distance, positions: cards.map((card) => Math.min(card.offsetLeft - first, distance)) };
+  };
+
+  // Índice de la tarjeta más cercana a un desplazamiento dado
+  const nearest = (x: number, positions: number[]) =>
+    positions.reduce((best, pos, i) => (Math.abs(pos - x) < Math.abs(positions[best] - x) ? i : best), 0);
 
   useGSAP(
     () => {
@@ -93,7 +64,7 @@ export default function Projects() {
       // Con "reducir movimiento" los proyectos quedan uno debajo del otro, sin pin
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        const distance = () => track.current!.scrollWidth - track.current!.clientWidth;
+        const distance = () => stops().distance;
 
         const slide = gsap.to(track.current, {
           x: () => -distance(),
@@ -106,11 +77,13 @@ export default function Projects() {
             scrub: 0.8,
             invalidateOnRefresh: true,
             onUpdate: (self) => {
-              const current = Math.round(self.progress * (projects.length - 1)) + 1;
+              const { distance, positions } = stops();
+              const current = nearest(self.progress * distance, positions) + 1;
               if (counter.current) counter.current.textContent = pad(current);
             },
           },
         });
+        slideTrigger.current = slide.scrollTrigger ?? null;
 
         // La imagen se mueve un poco más lento que su tarjeta (parallax)
         gsap.utils.toArray<HTMLElement>("[data-parallax]").forEach((media) => {
@@ -131,10 +104,50 @@ export default function Projects() {
             }
           );
         });
+
+        return () => {
+          slideTrigger.current = null;
+        };
       });
+
+      // Volviendo desde /proyectos: directo al último paso ("Ver todos"), sin animar
+      // (se consume adentro del frame: en desarrollo React corre el efecto dos veces y cancela el primero)
+      if (isReturningToProjects()) {
+        const frame = requestAnimationFrame(() => {
+          consumeReturnToProjects();
+          ScrollTrigger.refresh();
+          const st = slideTrigger.current;
+          const last = track.current!.lastElementChild as HTMLElement;
+          const target = st ? st.end : last.getBoundingClientRect().top + window.scrollY - 96;
+          const smooth = lenisRef.current;
+          if (smooth) {
+            // Lenis puede tener guardado el alto de /proyectos (más corta) y recortaría el destino
+            smooth.resize();
+            smooth.scrollTo(target, { immediate: true, force: true });
+          } else {
+            window.scrollTo(0, target);
+          }
+        });
+        return () => cancelAnimationFrame(frame);
+      }
     },
     { scope: section }
   );
+
+  // Teclado: al llegar con Tab a una tarjeta que está fuera de pantalla, se scrollea hasta ella
+  // (en vez de que el navegador corra el carril de costado y desarme el efecto)
+  const onCardFocus = (e: FocusEvent<HTMLElement>) => {
+    if (viewport.current) viewport.current.scrollLeft = 0;
+    const st = slideTrigger.current;
+    if (!st) return;
+    const card = e.currentTarget.parentElement!;
+    const index = Array.from(track.current!.children).indexOf(card);
+    const { distance, positions } = stops();
+    if (index < 0 || distance <= 0) return;
+    const target = st.start + (positions[index] / distance) * (st.end - st.start);
+    if (lenis) lenis.scrollTo(target, { duration: 0.8 });
+    else window.scrollTo(0, target);
+  };
 
   return (
     <section
@@ -149,20 +162,27 @@ export default function Projects() {
         >
           Proyectos<span className="text-[#c4314b]">.</span>
         </h2>
-        <p className="mb-1 hidden font-mono text-sm font-medium tabular-nums text-white/50 motion-safe:block md:mb-3">
-          <span ref={counter} className="text-white">01</span> / {pad(projects.length)}
+        <p
+          aria-hidden
+          className="mb-1 hidden font-mono text-sm font-medium tabular-nums text-white/50 motion-safe:block md:mb-3"
+        >
+          <span ref={counter} className="text-white">01</span> / {pad(STEPS)}
         </p>
       </div>
 
-      <div className="min-h-0 overflow-hidden motion-safe:flex-1">
-        <div ref={track} className="flex h-full flex-col motion-safe:flex-row">
-          {projects.map((project, i) => (
-            <div key={project.title} className="h-[80svh] w-full shrink-0 p-2 motion-safe:h-full md:p-3">
+      <div ref={viewport} className="min-h-0 overflow-hidden motion-safe:flex-1">
+        <div ref={track} className="flex h-full flex-col motion-safe:flex-row motion-safe:px-2 md:motion-safe:px-5">
+          {featuredProjects.map((project, i) => (
+            <div
+              key={project.title}
+              className="h-[80svh] w-full shrink-0 p-2 motion-safe:h-full motion-safe:w-[88%] md:p-3 md:motion-safe:w-[74%]"
+            >
               <a
                 href={project.href ?? "#proyectos"}
                 // Los links a otros sitios abren en una pestaña aparte
                 {...(project.href?.startsWith("http") && { target: "_blank", rel: "noreferrer" })}
-                className="group relative flex size-full flex-col justify-end overflow-hidden rounded-[1.5rem] bg-[#120d0f] md:rounded-[2rem]"
+                onFocus={onCardFocus}
+                className={`group relative flex size-full flex-col justify-end overflow-hidden rounded-[1.5rem] bg-[#120d0f] md:rounded-[2rem] ${FOCUS_RING}`}
               >
                 <div data-parallax className="absolute -inset-x-[5%] inset-y-0">
                   {project.image ? (
@@ -170,10 +190,10 @@ export default function Projects() {
                       src={project.image}
                       alt={`Captura de la web de ${project.title}`}
                       fill
-                      sizes="100vw"
+                      sizes="(min-width: 768px) 78vw, 92vw"
                       style={{ objectPosition: `${project.focus ?? "50%"} top` }}
                       // Celular y tablet: tarjeta vertical, sin cover la imagen se aplasta. Escritorio: se ve entera.
-                      className="object-cover lg:object-fill transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+                      className={`object-cover lg:object-fill transition-transform duration-1000 ${EASE} group-hover:scale-[1.03]`}
                     />
                   ) : (
                     <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_at_70%_30%,#3a0712_0%,#120d0f_60%)]">
@@ -189,14 +209,16 @@ export default function Projects() {
                 <div className="relative flex items-end justify-between gap-6 p-5 md:p-10">
                   <div className="max-w-3xl">
                     <span className="font-mono text-sm font-medium tabular-nums text-white/50">{pad(i + 1)}</span>
-                    <h3 className="mt-2 text-[clamp(2.2rem,6vw,5rem)] font-bold leading-[0.9] tracking-[-0.05em]">
+                    <h3 className="mt-2 text-[clamp(2.2rem,5.5vw,4.5rem)] font-bold leading-[0.9] tracking-[-0.05em]">
                       {project.title}
                     </h3>
-                    <p className="mt-3 max-w-xl text-[clamp(1rem,1.8vw,1.5rem)] font-medium leading-tight tracking-[-0.02em] text-white/60">
+                    <p className="mt-3 max-w-xl text-[clamp(1rem,1.6vw,1.375rem)] font-medium leading-tight tracking-[-0.02em] text-white/60">
                       {project.description}
                     </p>
                   </div>
-                  <span className="hidden size-14 shrink-0 place-items-center rounded-full bg-white/10 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-1 group-hover:translate-x-1 md:grid">
+                  <span
+                    className={`hidden size-14 shrink-0 place-items-center rounded-full bg-white/10 transition-transform duration-500 ${EASE} group-hover:-translate-y-1 group-hover:translate-x-1 md:grid`}
+                  >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" className="size-6" aria-hidden>
                       <path d="M7 17 17 7M8 7h9v9" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -205,6 +227,39 @@ export default function Projects() {
               </a>
             </div>
           ))}
+
+          {/* Paso final: lleva a la página con todos los proyectos */}
+          <div className="h-[45svh] w-full shrink-0 p-2 motion-safe:h-full motion-safe:w-[72%] md:p-3 md:motion-safe:w-[36%]">
+            <Link
+              href="/proyectos"
+              onFocus={onCardFocus}
+              className={`group relative flex size-full flex-col justify-between overflow-hidden rounded-[1.5rem] bg-[radial-gradient(ellipse_at_70%_20%,#3a0712_0%,#120d0f_65%)] p-5 md:rounded-[2rem] md:p-10 ${FOCUS_RING}`}
+            >
+              <span className="font-mono text-sm font-medium tabular-nums text-white/50">{pad(STEPS)}</span>
+
+              <div>
+                {MORE > 0 && (
+                  <p className="text-[clamp(4rem,10vw,9rem)] font-bold leading-[0.8] tracking-[-0.06em] text-[#c4314b]">
+                    +{MORE}
+                  </p>
+                )}
+                <h3 className="mt-4 text-[clamp(2.2rem,5vw,4.5rem)] font-bold leading-[0.9] tracking-[-0.05em]">
+                  Ver todos
+                </h3>
+                <p className="mt-3 flex items-center gap-3 text-[clamp(1rem,1.6vw,1.375rem)] font-medium leading-tight tracking-[-0.02em] text-white/60">
+                  {MORE > 0
+                    ? `${MORE} ${MORE === 1 ? "proyecto más" : "proyectos más"}`
+                    : "Todos los proyectos"}
+                  <span
+                    aria-hidden
+                    className={`inline-block transition-transform duration-500 ${EASE} group-hover:translate-x-2`}
+                  >
+                    →
+                  </span>
+                </p>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
     </section>

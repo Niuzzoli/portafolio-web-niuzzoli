@@ -18,6 +18,7 @@ export default function SiteFooter() {
   const [revealed, setRevealed] = useState(false);
   const [desktop, setDesktop] = useState<boolean | null>(null);
   const nameRef = useRef<HTMLHeadingElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const query = window.matchMedia(DESKTOP_QUERY);
@@ -28,18 +29,22 @@ export default function SiteFooter() {
   }, []);
 
   useGSAP(() => {
+    // El contenido que tapa al footer es el elemento justo anterior. No se busca por id porque Next
+    // deja guardada la página anterior en el DOM y habría dos "#contenido" (uno oculto).
     ScrollTrigger.create({
-      trigger: "#contenido",
+      trigger: rootRef.current?.previousElementSibling ?? "#contenido",
       start: "bottom 95%",
       onEnter: () => setRevealed(true),
       onLeaveBack: () => setRevealed(false),
     });
   });
 
-  // Arrancan escondidas (gsap maneja el yPercent, así no se mezcla con transforms en px)
+  // Arrancan escondidas (gsap maneja el yPercent, así no se mezcla con transforms en px).
+  // y: 0 explícito: al volver a la home desde otra página, gsap relee la posición escondida
+  // como px y la sumaba al yPercent, así que las letras nunca subían.
   useGSAP(
     () => {
-      gsap.set(gsap.utils.toArray("[data-char]", nameRef.current), { yPercent: 125 });
+      gsap.set(gsap.utils.toArray("[data-char]", nameRef.current), { y: 0, yPercent: 125 });
     },
     { scope: nameRef },
   );
@@ -70,7 +75,7 @@ export default function SiteFooter() {
   );
 
   return (
-    <div className="sticky bottom-0 z-0 h-[75svh] overflow-hidden bg-black md:h-[80svh]">
+    <div ref={rootRef} className="sticky bottom-0 z-0 h-[75svh] overflow-hidden bg-black md:h-[80svh]">
       {/* Las manos ocupan solo la franja de arriba: el nombre queda libre abajo */}
       <div className="absolute inset-x-0 top-0 bottom-0 md:bottom-[10vw]">
         {desktop !== null && (

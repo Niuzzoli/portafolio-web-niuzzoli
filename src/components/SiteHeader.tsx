@@ -12,10 +12,15 @@ import {
 } from "@/components/ui/spotlight-navbar";
 import PillButton from "@/components/PillButton";
 import PillNav, { type PillNavItem } from "@/components/PillNav";
+import { isReturningToProjects } from "@/lib/return-to-projects";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export const INTRO_DONE_EVENT = "intro:done";
+
+// La intro se ve una sola vez por visita. Al volver a la home desde otra página
+// (que Next deja guardada y vuelve a mostrar) no se repite.
+let introPlayed = false;
 
 const navItems: NavItem[] = [
   { label: "Inicio", href: "#inicio" },
@@ -111,7 +116,8 @@ export default function SiteHeader() {
   useGSAP(
     () => {
       history.scrollRestoration = "manual";
-      window.scrollTo(0, 0);
+      const skipIntro = introPlayed || isReturningToProjects();
+      if (!skipIntro) window.scrollTo(0, 0);
 
       const reduce = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
@@ -130,6 +136,7 @@ export default function SiteHeader() {
         );
         gsap.set([navLogo.current, mobileLogo.current], { autoAlpha: 1 });
         gsap.set([flyLogo.current, backdrop.current], { autoAlpha: 0 });
+        introPlayed = true;
         setIntroDone(true);
         startHero();
       };
@@ -142,6 +149,12 @@ export default function SiteHeader() {
         document.documentElement.dataset.intro = "done";
         window.dispatchEvent(new Event(INTRO_DONE_EVENT));
       };
+
+      // Ya se vio (o se vuelve a proyectos): todo directo a su estado final, sin animar
+      if (skipIntro) {
+        finish();
+        return;
+      }
 
       gsap.fromTo(
         flyLogo.current,
