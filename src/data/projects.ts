@@ -45,6 +45,15 @@ export const projects: Project[] = [
     destacado: true,
   },
   {
+    title: "Tortoriello",
+    description: "Empresa de trasnporte y logística especializada en cargas peligrosas, combustible y servicios para la industria energética.",
+    image: "/proyectos/tortoriello.png",
+    focus: "15%",
+    href: "https://tortoriello.com.ar",
+    category: "web",
+    destacado: false,
+  },
+  {
     title: "Serdigital",
     description: "Consultora de transformación digital que desarrolla software a medida y brinda soluciones de seguridad informática para empresas.",
     image: "/proyectos/serdigital.png",
